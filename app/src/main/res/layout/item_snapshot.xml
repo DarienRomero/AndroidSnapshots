@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <ImageButton
+        android:id="@+id/btnDelete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_delete"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="?attr/selectableItemBackground"
+        android:layout_marginTop="@dimen/common_padding_default"
+        android:layout_marginRight="@dimen/common_padding_default"
+        />
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="0dp"
+        android:textAppearance="?attr/textAppearanceSubtitle2"
+        android:layout_height="wrap_content"
+        tools:text="Título de la instantánea"
+        android:layout_marginHorizontal="@dimen/common_padding_default"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btnDelete"
+        app:layout_constraintBottom_toBottomOf="@id/btnDelete"
+        />
+</androidx.constraintlayout.widget.ConstraintLayout>
