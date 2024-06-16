@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "182640729173",
+    "project_id": "proyectosvariados-51681",
+    "storage_bucket": "proyectosvariados-51681.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182640729173:android:0805b7fd00f6776fc888dc",
+        "android_client_info": {
+          "package_name": "com.example.snapshots"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNFwMaCBeDRezfa661Rk3ASPI_kEfiw5E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
