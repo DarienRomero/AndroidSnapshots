@@ -1,11 +1,14 @@
 package com.example.snapshots
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.example.snapshots.databinding.ActivityMainBinding
 import com.firebase.ui.auth.AuthUI
+import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import java.util.Arrays
 
@@ -34,6 +37,7 @@ class MainActivity : AppCompatActivity() {
             val user = it.currentUser
             if(user == null){
                 startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder()
+                    .setIsSmartLockEnabled(false)
                     .setAvailableProviders(
                         Arrays.asList(
                             AuthUI.IdpConfig.EmailBuilder().build(),
@@ -102,6 +106,20 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         mFirebaseAuth?.removeAuthStateListener(mAuthListener)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(requestCode == RC_SIGN_IN){
+            if(resultCode == RESULT_OK){
+                Toast.makeText(this, "Bienvenido...", Toast.LENGTH_LONG).show()
+            }else{
+                //El usuario cancelo el Firebase UI
+                if(IdpResponse.fromResultIntent(data) == null){
+                    finish()
+                }
+            }
+        }
     }
 
 }
