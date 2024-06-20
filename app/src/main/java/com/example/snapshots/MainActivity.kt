@@ -1,9 +1,12 @@
 package com.example.snapshots
 
+import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.example.snapshots.databinding.ActivityMainBinding
@@ -21,6 +24,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var mAuthListener: FirebaseAuth.AuthStateListener
     private var mFirebaseAuth: FirebaseAuth? = null
 
+    private val authResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
+
+        if(it.resultCode == RESULT_OK){
+            Toast.makeText(this, getString(R.string.welcome), Toast.LENGTH_LONG).show()
+        }else{
+            //El usuario cancelo el Firebase UI
+            if(IdpResponse.fromResultIntent(it.data) == null){
+                finish()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding = ActivityMainBinding.inflate(layoutInflater)
@@ -36,14 +51,18 @@ class MainActivity : AppCompatActivity() {
         mAuthListener = FirebaseAuth.AuthStateListener {
             val user = it.currentUser
             if(user == null){
-                startActivityForResult(AuthUI.getInstance().createSignInIntentBuilder()
-                    .setIsSmartLockEnabled(false)
-                    .setAvailableProviders(
-                        Arrays.asList(
-                            AuthUI.IdpConfig.EmailBuilder().build(),
-                            AuthUI.IdpConfig.GoogleBuilder().build(),
-                        ),
-                    ).build(), RC_SIGN_IN)
+                authResult.launch(
+                    AuthUI.getInstance().createSignInIntentBuilder()
+                        .setIsSmartLockEnabled(false)
+                        .setAvailableProviders(
+                            listOf(
+                                AuthUI.IdpConfig.EmailBuilder().build(),
+                                AuthUI.IdpConfig.GoogleBuilder().build(),
+                            ),
+                        ).build()
+                )
+
+
             }
         }
     }
@@ -70,7 +89,7 @@ class MainActivity : AppCompatActivity() {
             .add(R.id.hostFragment, homeFragment, HomeFragment::class.java.name)
             .commit()
 
-        mBinding.bottomNav.setOnNavigationItemSelectedListener {
+        mBinding.bottomNav.setOnItemSelectedListener {
             when(it.itemId){
                 R.id.action_home -> {
                     mFragmentManager.beginTransaction().hide(mActiveFragment)
@@ -96,6 +115,11 @@ class MainActivity : AppCompatActivity() {
 
             }
         }
+        mBinding.bottomNav.setOnItemReselectedListener {
+            when(it.itemId){
+                R.id.action_home -> (homeFragment as HomeAux).goToTop()
+            }
+        }
     }
 
     override fun onResume() {
@@ -112,7 +136,7 @@ class MainActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if(requestCode == RC_SIGN_IN){
             if(resultCode == RESULT_OK){
-                Toast.makeText(this, "Bienvenido...", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, getString(R.string.welcome), Toast.LENGTH_LONG).show()
             }else{
                 //El usuario cancelo el Firebase UI
                 if(IdpResponse.fromResultIntent(data) == null){

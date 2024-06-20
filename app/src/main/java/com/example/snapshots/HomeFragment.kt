@@ -2,6 +2,7 @@ package com.example.snapshots
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -15,11 +16,15 @@ import com.example.snapshots.databinding.FragmentHomeBinding
 import com.example.snapshots.databinding.ItemSnapshotBinding
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
+import com.firebase.ui.database.SnapshotParser
+import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.FirebaseStorage
 
 
-class HomeFragment : Fragment() {
+class HomeFragment : Fragment(), HomeAux{
 
     private lateinit var mFirebaseAdapter: FirebaseRecyclerAdapter<Snapshot, SnapshotHolder>
     private lateinit var mBinding: FragmentHomeBinding
@@ -40,7 +45,15 @@ class HomeFragment : Fragment() {
 
         val query = FirebaseDatabase.getInstance().reference.child("snapshots")
 
-        val options = FirebaseRecyclerOptions.Builder<Snapshot>().setQuery(query, Snapshot::class.java).build()
+        //Se parsea los datos
+        val options =
+            FirebaseRecyclerOptions.Builder<Snapshot>().setQuery(query, SnapshotParser {
+                val snapshot = it.getValue(Snapshot::class.java)
+                snapshot!!.id = it.key!!
+                snapshot
+            } ).build()
+            //FirebaseRecyclerOptions.Builder<Snapshot>()
+            //.setQuery(query, Snapshot::class.java).build()
 
         mFirebaseAdapter = object : FirebaseRecyclerAdapter<Snapshot,SnapshotHolder>(options){
             private lateinit var mContext: Context
@@ -57,11 +70,17 @@ class HomeFragment : Fragment() {
                 with(holder){
                     setListener(snapshot)
                     binding.tvTitle.text = snapshot.title
+                    binding.cbLike.text = snapshot.likeList.keys.size.toString()
+                    FirebaseAuth.getInstance().currentUser?.let {
+                        binding.cbLike.isChecked = snapshot.likeList.containsKey(it.uid)
+                    }
+
                     Glide.with(mContext)
                         .load(snapshot.photoUrl)
                         .diskCacheStrategy(DiskCacheStrategy.ALL)
                         .centerCrop()
                         .into(binding.imgPhoto)
+
                 }
             }
 
@@ -97,12 +116,48 @@ class HomeFragment : Fragment() {
         mFirebaseAdapter.stopListening()
     }
 
+    private fun deleteSnapshot(snapshot: Snapshot){
+        Log.d("TEST", snapshot.id)
+        val storageSnapshotRef = FirebaseStorage.getInstance().reference.child("snapshots")
+            .child(FirebaseAuth.getInstance().currentUser!!.uid)
+            .child(snapshot.id)
+        storageSnapshotRef.delete().addOnCompleteListener { result ->
+            if(result.isSuccessful){
+                val databaseReference = FirebaseDatabase.getInstance().reference.child("snapshots")
+                databaseReference.child(snapshot.id).removeValue()
+            }else{
+                Snackbar.make(mBinding.root, "Error al eliminar", Snackbar.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun setLike(snapshot: Snapshot, checked: Boolean){
+        val databaseReference = FirebaseDatabase.getInstance().reference.child("snapshots")
+        if(checked){
+            databaseReference.child(snapshot.id).child("likeList")
+                .child(FirebaseAuth.getInstance().currentUser!!.uid)
+                .setValue(checked)
+        }else{
+            databaseReference.child(snapshot.id).child("likeList")
+                .child(FirebaseAuth.getInstance().currentUser!!.uid)
+                .setValue(null)
+        }
+    }
     inner class SnapshotHolder(view: View) : RecyclerView.ViewHolder(view){
         val binding = ItemSnapshotBinding.bind(view)
 
         fun setListener(snapshot: Snapshot){
-
+            binding.btnDelete.setOnClickListener {
+                deleteSnapshot(snapshot)
+            }
+            binding.cbLike.setOnCheckedChangeListener { buttonView, checked ->
+                setLike(snapshot, checked)
+            }
         }
+    }
+
+    override fun goToTop() {
+        mBinding.recyclerView.smoothScrollToPosition(0)
     }
 
 }

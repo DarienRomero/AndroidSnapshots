@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.example.snapshots.databinding.FragmentProfileBinding
 import com.firebase.ui.auth.AuthUI
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 
 class ProfileFragment : Fragment() {
@@ -17,7 +18,7 @@ class ProfileFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         mBinding = FragmentProfileBinding.inflate(inflater, container, false)
         return mBinding.root
     }
@@ -35,7 +36,11 @@ class ProfileFragment : Fragment() {
         context?.let {
             AuthUI.getInstance().signOut(it)
                 .addOnCompleteListener {
-                    Toast.makeText(context, "Hasta pronto...", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, getString(R.string.goodbye), Toast.LENGTH_LONG).show()
+                    mBinding.tvName.text = ""
+                    mBinding.tvEmail.text = ""
+                    (activity?.findViewById(R.id.bottomNav) as? BottomNavigationView)
+                        ?.selectedItemId = R.id.action_home
                 }
         }
 
