@@ -74,6 +74,7 @@ class AddFragment : Fragment() {
         val key = mDatabaseReference.push().key!!
         val storageRef = mStorageReference.child(PATH_SNAPSHOT).child(FirebaseAuth.getInstance().currentUser!!.uid).child(key)
         if(mPhotoSelectedUrl != null){
+            hideKeyboard()
             storageRef.putFile(mPhotoSelectedUrl!!)
                 .addOnProgressListener {
                     val progress = (100 * it.bytesTransferred/it.totalByteCount).toDouble()
@@ -85,11 +86,10 @@ class AddFragment : Fragment() {
                 }
                 .addOnSuccessListener {
                     Snackbar.make(mBinding.root, "Instantánea publicada", Snackbar.LENGTH_SHORT).show()
-                    hideKeyboard()
+
                     it.storage.downloadUrl.addOnSuccessListener {
                         saveSnapshot(key, it.toString(), mBinding.etTitle.text.toString().trim())
-                        mBinding.tilTitle.visibility = View.GONE
-                        mBinding.tvMessage.text = getString(R.string.post_message_title)
+
                     }
                 }
                 .addOnFailureListener{
@@ -100,8 +100,15 @@ class AddFragment : Fragment() {
     }
 
     private fun saveSnapshot(key: String, url: String, title: String){
-        val snapshot = Snapshot(id = key, title = title, photoUrl = url)
+        val snapshot = Snapshot( ownerUid =  FirebaseAuth.getInstance().currentUser!!.uid, id = key, title = title, photoUrl = url)
         mDatabaseReference.child(key).setValue(snapshot)
+            .addOnSuccessListener {
+                with(mBinding){
+                    tilTitle.visibility = View.GONE
+                    tvMessage.text = getString(R.string.post_message_title)
+                    etTitle
+                }
+            }
     }
 
     private fun hideKeyboard(){

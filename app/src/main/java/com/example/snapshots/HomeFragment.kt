@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.transition.Visibility
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.snapshots.databinding.FragmentHomeBinding
@@ -17,6 +18,7 @@ import com.example.snapshots.databinding.ItemSnapshotBinding
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.firebase.ui.database.SnapshotParser
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseError
@@ -81,6 +83,12 @@ class HomeFragment : Fragment(), HomeAux{
                         .centerCrop()
                         .into(binding.imgPhoto)
 
+                    binding.btnDelete.visibility= if (model.ownerUid == FirebaseAuth.getInstance().currentUser!!.uid){
+                        View.VISIBLE
+                    }else{
+                        View.INVISIBLE
+                    }
+
                 }
             }
 
@@ -117,18 +125,34 @@ class HomeFragment : Fragment(), HomeAux{
     }
 
     private fun deleteSnapshot(snapshot: Snapshot){
-        Log.d("TEST", snapshot.id)
-        val storageSnapshotRef = FirebaseStorage.getInstance().reference.child("snapshots")
-            .child(FirebaseAuth.getInstance().currentUser!!.uid)
-            .child(snapshot.id)
-        storageSnapshotRef.delete().addOnCompleteListener { result ->
-            if(result.isSuccessful){
-                val databaseReference = FirebaseDatabase.getInstance().reference.child("snapshots")
-                databaseReference.child(snapshot.id).removeValue()
-            }else{
-                Snackbar.make(mBinding.root, "Error al eliminar", Snackbar.LENGTH_LONG).show()
-            }
+        context?.let {
+            MaterialAlertDialogBuilder(
+                it
+            )
+                .setTitle(R.string.dialog_delete_title)
+                .setPositiveButton(R.string.dialog_delete_confirm) { _, _ ->
+                    Log.d("TEST", snapshot.id)
+                    val storageSnapshotRef =
+                        FirebaseStorage.getInstance().reference.child("snapshots")
+                            .child(FirebaseAuth.getInstance().currentUser!!.uid)
+                            .child(snapshot.id)
+                    storageSnapshotRef.delete().addOnCompleteListener { result ->
+                        if (result.isSuccessful) {
+                            val databaseReference =
+                                FirebaseDatabase.getInstance().reference.child("snapshots")
+                            databaseReference.child(snapshot.id).removeValue()
+                        } else {
+                            Snackbar.make(mBinding.root, "Error al eliminar", Snackbar.LENGTH_LONG)
+                                .show()
+                        }
+                    }
+                    // Do something
+                }
+                .setNegativeButton(R.string.dialog_delete_cancel, null)
+                .show()
         }
+
+
     }
 
     private fun setLike(snapshot: Snapshot, checked: Boolean){

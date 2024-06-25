@@ -20,7 +20,7 @@ class MainActivity : AppCompatActivity() {
     private val RC_SIGN_IN = 21
 
     private lateinit var mActiveFragment: Fragment
-    private lateinit var mFragmentManager: FragmentManager
+    private var mFragmentManager: FragmentManager? = null
     private lateinit var mAuthListener: FirebaseAuth.AuthStateListener
     private var mFirebaseAuth: FirebaseAuth? = null
 
@@ -41,7 +41,6 @@ class MainActivity : AppCompatActivity() {
         mBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(mBinding.root)
         setupAuth()
-        setupBottomNav()
 
 
     }
@@ -61,14 +60,23 @@ class MainActivity : AppCompatActivity() {
                             ),
                         ).build()
                 )
-
-
+                mFragmentManager = null
+            }else{
+                if(mFragmentManager == null){
+                    mFragmentManager = supportFragmentManager
+                    setupBottomNav(mFragmentManager!!)
+                }
             }
         }
     }
 
-    private fun setupBottomNav() {
-        mFragmentManager = supportFragmentManager
+    private fun setupBottomNav(fragmentManager: FragmentManager) {
+
+        mFragmentManager?.let {
+            for(fragment in it.fragments){
+                it.beginTransaction().remove(fragment!!).commit()
+            }
+        }
 
         val homeFragment = HomeFragment()
         val addFragment = AddFragment()
@@ -76,35 +84,35 @@ class MainActivity : AppCompatActivity() {
 
         //Se crean los fragments y se ocultan el add y el profile
         mActiveFragment = homeFragment
-        mFragmentManager.beginTransaction()
+        fragmentManager.beginTransaction()
             .add(R.id.hostFragment, profileFragment, ProfileFragment::class.java.name)
             .hide(profileFragment)
             .commit()
 
-        mFragmentManager.beginTransaction()
+        fragmentManager.beginTransaction()
             .add(R.id.hostFragment, addFragment, AddFragment::class.java.name)
             .hide(addFragment)
             .commit()
-        mFragmentManager.beginTransaction()
+        fragmentManager.beginTransaction()
             .add(R.id.hostFragment, homeFragment, HomeFragment::class.java.name)
             .commit()
 
         mBinding.bottomNav.setOnItemSelectedListener {
             when(it.itemId){
                 R.id.action_home -> {
-                    mFragmentManager.beginTransaction().hide(mActiveFragment)
+                    fragmentManager.beginTransaction().hide(mActiveFragment)
                         .show(homeFragment).commit()
                     mActiveFragment = homeFragment
                     true
                 }
                 R.id.action_add -> {
-                    mFragmentManager.beginTransaction().hide(mActiveFragment)
+                    fragmentManager.beginTransaction().hide(mActiveFragment)
                         .show(addFragment).commit()
                     mActiveFragment = addFragment
                     true
                 }
                 R.id.action_profile -> {
-                    mFragmentManager.beginTransaction().hide(mActiveFragment)
+                    fragmentManager.beginTransaction().hide(mActiveFragment)
                         .show(profileFragment).commit()
                     mActiveFragment = profileFragment
                     true

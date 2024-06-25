@@ -11,4 +11,7 @@
     <string name="goodbye">Hasta pronto...</string>
     <string name="publish">Publicar</string>
     <string name="complete_name">Nombre completo</string>
+    <string name="dialog_delete_title">¿Estás seguro?</string>
+    <string name="dialog_delete_confirm">Confirmar</string>
+    <string name="dialog_delete_cancel">Cancelar</string>
 </resources>
